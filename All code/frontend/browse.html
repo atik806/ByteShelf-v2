@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Library — ByteShelf</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg: #0a0a0f; --surface: #111118; --card: #16161f; --border: #2a2a3a; --accent: #00ffc2; --accent2: #6e44ff; --accent3: #ff4466; --text: #e8e8f0; --muted: #7070a0; --mono: 'Space Mono', monospace; --sans: 'Syne', sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9990; opacity: 0.6; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0, 255, 194, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 194, 0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
+    .dashboard-layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+    .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; }
+    .sidebar-logo { padding: 0 8px 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+    .sidebar-logo a { font-family: var(--mono); font-size: 1.3rem; color: var(--accent); text-decoration: none; }
+    .logo-bracket { color: var(--accent2); font-size: 1.5rem; }
+    .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: var(--muted); text-decoration: none; font-family: var(--mono); font-size: 0.8rem; border-radius: 8px; transition: all 0.2s; }
+    .nav-item:hover { background: rgba(0, 255, 194, 0.05); color: var(--text); }
+    .nav-item.active { background: rgba(0, 255, 194, 0.1); color: var(--accent); }
+    .nav-item svg { width: 18px; height: 18px; }
+    .sidebar-footer { padding-top: 16px; border-top: 1px solid var(--border); }
+    .user-info { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--card); border-radius: 8px; margin-bottom: 12px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; color: var(--bg); }
+    .user-name { font-size: 0.9rem; font-weight: 600; }
+    .user-plan { font-family: var(--mono); font-size: 0.65rem; color: var(--accent); }
+    .logout-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 16px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: var(--mono); font-size: 0.75rem; border-radius: 8px; cursor: pointer; }
+    .main-content { flex: 1; margin-left: 260px; padding: 32px; }
+    .page-header { margin-bottom: 32px; }
+    .page-title { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
+    .page-subtitle { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+    .search-bar { display: flex; gap: 12px; margin-bottom: 24px; }
+    .search-input { flex: 1; padding: 14px 20px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 0.85rem; border-radius: 8px; }
+    .search-input:focus { outline: none; border-color: var(--accent); }
+    .filter-select { padding: 14px 20px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 0.8rem; border-radius: 8px; cursor: pointer; }
+    .categories { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .category-btn { padding: 8px 16px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: var(--mono); font-size: 0.7rem; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+    .category-btn:hover, .category-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0, 255, 194, 0.1); }
+    .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    .book-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: all 0.2s; cursor: pointer; }
+    .book-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .book-cover { width: 100%; aspect-ratio: 3/4; background: linear-gradient(135deg, var(--accent2), var(--accent)); border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 2.5rem; color: var(--bg); font-weight: 700; }
+    .book-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+    .book-author { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); margin-bottom: 12px; }
+    .book-meta { display: flex; gap: 8px; }
+    .book-category { background: rgba(110, 68, 255, 0.2); color: var(--accent2); padding: 4px 10px; border-radius: 4px; font-family: var(--mono); font-size: 0.6rem; }
+    .book-price { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); font-weight: 700; }
+    .btn-primary { padding: 14px 24px; background: var(--accent); color: var(--bg); font-family: var(--mono); font-size: 0.75rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0, 255, 194, 0.3); }
+  </style>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><a href="index.html"><span class="logo-bracket">[</span>ByteShelf<span class="logo-bracket">]</span></a></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+        <a href="my-books.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>My Books</a>
+        <a href="browse.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Browse Library</a>
+        <a href="reading-progress.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>Progress</a>
+        <a href="notes.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>My Notes</a>
+        <a href="settings.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>Settings</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info"><div class="user-avatar" id="userAvatar">S</div><div class="user-name" id="userName">Student</div></div>
+        <button class="logout-btn" onclick="Auth.logout()">Logout</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="page-header"><h1 class="page-title">Browse Library</h1><p class="page-subtitle">Discover new books to read</p></header>
+      <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Search books, authors..." id="searchInput">
+        <select class="filter-select"><option>All Categories</option><option>Algorithms</option><option>Machine Learning</option><option>Operating Systems</option><option>Networks</option><option>Databases</option></select>
+      </div>
+      <div class="categories">
+        <button class="category-btn active">All</button>
+        <button class="category-btn">Algorithms</button>
+        <button class="category-btn">Machine Learning</button>
+        <button class="category-btn">Operating Systems</button>
+        <button class="category-btn">Networks</button>
+        <button class="category-btn">Databases</button>
+        <button class="category-btn">Security</button>
+      </div>
+      <div class="books-grid" id="booksGrid"></div>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    const books = [
+      { id: 1, title: 'Introduction to Algorithms', author: 'Cormen, Leiserson, Rivest, Stein', category: 'Algorithms', price: 12.99 },
+      { id: 2, title: 'Deep Learning', author: 'Goodfellow, Bengio, Courville', category: 'Machine Learning', price: 9.99 },
+      { id: 3, title: 'The Web Application Hacker\'s Handbook', author: 'Stuttard, Pinto', category: 'Security', price: 8.99 },
+      { id: 4, title: 'Operating System Concepts', author: 'Silberschatz, Galvin, Gagne', category: 'Operating Systems', price: 11.99 },
+      { id: 5, title: 'Computer Networks', author: 'Tanenbaum, Wetherall', category: 'Networks', price: 10.99 },
+      { id: 6, title: 'Database System Concepts', author: 'Silberschatz, Korth, Sudarshan', category: 'Databases', price: 13.99 },
+      { id: 7, title: 'Clean Code', author: 'Robert C. Martin', category: 'Programming', price: 7.99 },
+      { id: 8, title: 'Design Patterns', author: 'Gang of Four', category: 'Programming', price: 11.99 }
+    ];
+    {
+      if (! function renderBooks()Auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+      const user = Auth.getUser();
+      if (user) { document.getElementById('userName').textContent = user.name || 'Student'; document.getElementById('userAvatar').textContent = (user.name || 'S')[0].toUpperCase(); }
+      const grid = document.getElementById('booksGrid');
+      grid.innerHTML = books.map(b => `
+        <div class="book-card">
+          <div class="book-cover">${b.title.charAt(0)}</div>
+          <div class="book-title">${b.title}</div>
+          <div class="book-author">${b.author}</div>
+          <div class="book-meta"><span class="book-category">${b.category}</span><span class="book-price">$${b.price}</span></div>
+        </div>
+      `).join('');
+    }
+    document.addEventListener('DOMContentLoaded', renderBooks);
+  </script>
+</body>
+</html>

@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — ByteShelf</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --card: #16161f;
+      --border: #2a2a3a;
+      --accent: #00ffc2;
+      --accent2: #6e44ff;
+      --accent3: #ff4466;
+      --text: #e8e8f0;
+      --muted: #7070a0;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Syne', sans-serif;
+      --px: clamp(20px, 5vw, 60px);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    .cursor,
+    .cursor-ring {
+      display: none;
+    }
+
+    @media (hover: hover) {
+      body {
+        cursor: none;
+      }
+
+      .cursor {
+        width: 12px;
+        height: 12px;
+        background: var(--accent);
+        border-radius: 50%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 9999;
+        mix-blend-mode: difference;
+        display: block;
+      }
+
+      .cursor-ring {
+        width: 40px;
+        height: 40px;
+        border: 1px solid rgba(0, 255, 194, 0.4);
+        border-radius: 50%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 9998;
+        transition: width 0.2s, height 0.2s, opacity 0.2s;
+        display: block;
+      }
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9990;
+      opacity: 0.6;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(0, 255, 194, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 194, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .dashboard-layout {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+    }
+
+    .sidebar-logo {
+      padding: 0 8px 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .sidebar-logo a {
+      font-family: var(--mono);
+      font-size: 1.3rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .logo-bracket {
+      color: var(--accent2);
+      font-size: 1.5rem;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: var(--muted);
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-item:hover {
+      background: rgba(0, 255, 194, 0.05);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: rgba(0, 255, 194, 0.1);
+      color: var(--accent);
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .sidebar-footer {
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--card);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--bg);
+    }
+
+    .user-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-plan {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover {
+      border-color: var(--accent3);
+      color: var(--accent3);
+    }
+
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      padding: 32px;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 24px;
+      border-radius: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 255, 194, 0.1);
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+    }
+
+    .stat-icon.books { background: rgba(0, 255, 194, 0.1); }
+    .stat-icon.downloads { background: rgba(110, 68, 255, 0.1); }
+    .stat-icon.hours { background: rgba(255, 68, 102, 0.1); }
+    .stat-icon.streak { background: rgba(0, 255, 194, 0.1); }
+
+    .stat-number {
+      font-family: var(--mono);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .card-subtitle {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .book-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .book-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .book-cover {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      border-radius: 6px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 2rem;
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    .book-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .book-author {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .book-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+    }
+
+    .book-category {
+      background: rgba(110, 68, 255, 0.2);
+      color: var(--accent2);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .book-pages {
+      color: var(--muted);
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--surface);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface);
+      border-radius: 8px;
+    }
+
+    .activity-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .activity-icon.download { background: rgba(0, 255, 194, 0.1); }
+    .activity-icon.read { background: rgba(110, 68, 255, 0.1); }
+    .activity-icon.note { background: rgba(255, 68, 102, 0.1); }
+
+    .activity-content {
+      flex: 1;
+    }
+
+    .activity-text {
+      font-size: 0.85rem;
+      margin-bottom: 2px;
+    }
+
+    .activity-text strong {
+      color: var(--accent);
+    }
+
+    .activity-time {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 255, 194, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, rgba(0, 255, 194, 0.1), rgba(110, 68, 255, 0.1));
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--accent);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 16px 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast-success { border-color: var(--accent); }
+    .toast-error { border-color: var(--accent3); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .quick-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .quick-link:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .quick-link-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(0, 255, 194, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .quick-link-text {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .main-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <a href="index.html">
+          <span class="logo-bracket">[</span>ByteShelf<span class="logo-bracket">]</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a href="my-books.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          My Books
+        </a>
+        <a href="browse.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Browse Library
+        </a>
+        <a href="reading-progress.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          Progress
+        </a>
+        <a href="notes.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          My Notes
+        </a>
+        <a href="settings.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m17.36-5.36-4.24 4.24m-2.24-2.24L6.64 6.64m0 10.72l4.24-4.24m2.24 2.24 4.24 4.24"/></svg>
+          Settings
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">S</div>
+          <div class="user-details">
+            <div class="user-name" id="userName">Student</div>
+            <div class="user-plan" id="userPlan">Starter Plan</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          Logout
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <h1 class="page-title">Welcome back, <span id="welcomeName">Student</span></h1>
+        <p class="page-subtitle">Here's what's happening with your learning journey</p>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon books">📚</div>
+          <div class="stat-number" id="myBooksCount">0</div>
+          <div class="stat-label">My Books</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon downloads">⬇️</div>
+          <div class="stat-number" id="downloadsCount">0</div>
+          <div class="stat-label">Downloads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon hours">⏱️</div>
+          <div class="stat-number" id="readingHours">0</div>
+          <div class="stat-label">Hours Read</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon streak">🔥</div>
+          <div class="stat-number" id="streakDays">0</div>
+          <div class="stat-label">Day Streak</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Currently Reading</h3>
+          <p class="card-subtitle">Continue where you left off</p>
+        </div>
+        <div class="books-grid" id="currentBooks">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Recommended For You</h3>
+          <p class="card-subtitle">Based on your reading history</p>
+        </div>
+        <div class="books-grid" id="recommendedBooks">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Recent Activity</h3>
+          <p class="card-subtitle">Your latest actions</p>
+        </div>
+        <div class="activity-list" id="activityList">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Quick Actions</h3>
+        </div>
+        <div class="quick-links">
+          <a href="browse.html" class="quick-link">
+            <div class="quick-link-icon">🔍</div>
+            <span class="quick-link-text">Browse Books</span>
+          </a>
+          <a href="pricing.html" class="quick-link">
+            <div class="quick-link-icon">⚡</div>
+            <span class="quick-link-text">Upgrade Plan</span>
+          </a>
+          <a href="notes.html" class="quick-link">
+            <div class="quick-link-icon">📝</div>
+            <span class="quick-link-text">Create Note</span>
+          </a>
+          <a href="settings.html" class="quick-link">
+            <div class="quick-link-icon">⚙️</div>
+            <span class="quick-link-text">Settings</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    const mockData = {
+      myBooks: [
+        { id: 1, title: 'Introduction to Algorithms', author: 'Cormen et al.', category: 'Algorithms', pages: 1312, progress: 65 },
+        { id: 2, title: 'Deep Learning', author: 'Goodfellow et al.', category: 'ML', pages: 800, progress: 32 }
+      ],
+      recommended: [
+        { id: 3, title: 'Operating System Concepts', author: 'Silberschatz et al.', category: 'OS', pages: 944 },
+        { id: 4, title: 'Computer Networks', author: 'Tanenbaum et al.', category: 'Networks', pages: 1024 },
+        { id: 5, title: 'Database System Concepts', author: 'Korth et al.', category: 'Databases', pages: 1376 }
+      ],
+      stats: {
+        myBooks: 5,
+        downloads: 12,
+        readingHours: 48,
+        streakDays: 7
+      },
+      activities: [
+        { type: 'download', text: 'Downloaded <strong>Deep Learning</strong>', time: '2 hours ago' },
+        { type: 'read', text: 'Completed Chapter 5 of <strong>Algorithms</strong>', time: '5 hours ago' },
+        { type: 'note', text: 'Created note on <strong>Neural Networks</strong>', time: 'Yesterday' }
+      ]
+    };
+
+    function initDashboard() {
+      if (!Auth.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const user = Auth.getUser();
+      if (user) {
+        document.getElementById('welcomeName').textContent = user.name || 'Student';
+        document.getElementById('userName').textContent = user.name || 'Student';
+        document.getElementById('userAvatar').textContent = (user.name || 'S')[0].toUpperCase();
+        document.getElementById('userPlan').textContent = user.plan === 'starter' ? 'Starter Plan' : 
+          user.plan === 'scholar' ? 'Scholar Plan' : 'Team Plan';
+      }
+
+      renderStats();
+      renderCurrentBooks();
+      renderRecommended();
+      renderActivity();
+    }
+
+    function renderStats() {
+      document.getElementById('myBooksCount').textContent = mockData.stats.myBooks;
+      document.getElementById('downloadsCount').textContent = mockData.stats.downloads;
+      document.getElementById('readingHours').textContent = mockData.stats.readingHours;
+      document.getElementById('streakDays').textContent = mockData.stats.streakDays;
+    }
+
+    function renderCurrentBooks() {
+      const container = document.getElementById('currentBooks');
+      container.innerHTML = mockData.myBooks.map(book => `
+        <div class="book-card" onclick="openBook(${book.id})">
+          <div class="book-cover">${book.title.charAt(0)}</div>
+          <div class="book-title">${book.title}</div>
+          <div class="book-author">${book.author}</div>
+          <div class="book-meta">
+            <span class="book-category">${book.category}</span>
+            <span class="book-pages">${book.pages} pages</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${book.progress}%"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderRecommended() {
+      const container = document.getElementById('recommendedBooks');
+      container.innerHTML = mockData.recommended.map(book => `
+        <div class="book-card" onclick="openBook(${book.id})">
+          <div class="book-cover">${book.title.charAt(0)}</div>
+          <div class="book-title">${book.title}</div>
+          <div class="book-author">${book.author}</div>
+          <div class="book-meta">
+            <span class="book-category">${book.category}</span>
+            <span class="book-pages">${book.pages} pages</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderActivity() {
+      const container = document.getElementById('activityList');
+      const icons = { download: '⬇️', read: '📖', note: '📝' };
+      container.innerHTML = mockData.activities.map(activity => `
+        <div class="activity-item">
+          <div class="activity-icon ${activity.type}">${icons[activity.type]}</div>
+          <div class="activity-content">
+            <div class="activity-text">${activity.text}</div>
+            <div class="activity-time">${activity.time}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openBook(id) {
+      showToast('Opening book...', 'info');
+    }
+
+    function handleLogout() {
+      Auth.logout();
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    if (window.matchMedia('(hover: hover)').matches) {
+      const cursor = document.getElementById('cursor');
+      const ring = document.getElementById('cursorRing');
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => {
+        mx = e.clientX; my = e.clientY;
+        cursor.style.transform = `translate(${mx - 6}px, ${my - 6}px)`;
+      });
+      function animateRing() {
+        rx += (mx - rx - 20) * 0.12;
+        ry += (my - ry - 20) * 0.12;
+        ring.style.transform = `translate(${rx}px, ${ry}px)`;
+        requestAnimationFrame(animateRing);
+      }
+      animateRing();
+      document.querySelectorAll('a, button').forEach(el => {
+        el.addEventListener('mouseenter', () => { ring.style.width = '60px'; ring.style.height = '60px'; ring.style.opacity = '0.6'; });
+        el.addEventListener('mouseleave', () => { ring.style.width = '40px'; ring.style.height = '40px'; ring.style.opacity = '1'; });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initDashboard);
+  </script>
+</body>
+
+</html>

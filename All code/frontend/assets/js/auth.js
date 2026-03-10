@@ -32,7 +32,7 @@ const Auth = {
           
           const currentPath = window.location.pathname;
           if (currentPath.includes('login') || currentPath.includes('signup') || currentPath.endsWith('/login.html') || currentPath.endsWith('/signup.html')) {
-            window.location.href = 'index.html';
+            window.location.href = 'dashboard.html';
           } else {
             this.updateUI();
           }
@@ -56,7 +56,7 @@ const Auth = {
         
         const currentPath = window.location.pathname;
         if (currentPath.includes('login') || currentPath.includes('signup') || currentPath.endsWith('/login.html') || currentPath.endsWith('/signup.html')) {
-          window.location.href = 'index.html';
+          window.location.href = 'dashboard.html';
         } else {
           this.updateUI();
         }
@@ -169,10 +169,10 @@ const Auth = {
     this.clearSession();
     if (this.supabase) {
       this.supabase.auth.signOut().then(() => {
-        window.location.href = 'index.html';
+        window.location.href = 'dashboard.html';
       });
     } else {
-      window.location.href = 'index.html';
+      window.location.href = 'dashboard.html';
     }
   },
 
