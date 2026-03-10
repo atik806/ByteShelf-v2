@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pricing — ByteShelf</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --card: #16161f;
+      --border: #2a2a3a;
+      --accent: #00ffc2;
+      --accent2: #6e44ff;
+      --accent3: #ff4466;
+      --text: #e8e8f0;
+      --muted: #7070a0;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Syne', sans-serif;
+      --px: clamp(20px, 5vw, 60px);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow-x: hidden;
+    }
+
+    .cursor,
+    .cursor-ring {
+      display: none;
+    }
+
+    @media (hover: hover) {
+      body {
+        cursor: none;
+      }
+
+      .cursor {
+        width: 12px;
+        height: 12px;
+        background: var(--accent);
+        border-radius: 50%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 9999;
+        mix-blend-mode: difference;
+        display: block;
+      }
+
+      .cursor-ring {
+        width: 40px;
+        height: 40px;
+        border: 1px solid rgba(0, 255, 194, 0.4);
+        border-radius: 50%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 9998;
+        transition: width 0.2s, height 0.2s, opacity 0.2s;
+        display: block;
+      }
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9990;
+      opacity: 0.6;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(0, 255, 194, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 194, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 18px var(--px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 200;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    nav.scrolled {
+      background: rgba(10, 10, 15, 0.9);
+      backdrop-filter: blur(16px);
+      border-color: var(--border);
+    }
+
+    .logo {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .logo-bracket {
+      color: var(--accent2);
+      font-size: 1.3rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .nav-cta {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 9px 20px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: background 0.2s, color 0.2s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .nav-cta:hover {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .nav-auth {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-menu {
+      position: relative;
+    }
+
+    .user-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .user-menu-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .user-name-display {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text);
+    }
+
+    .user-arrow {
+      font-size: 0.5rem;
+      color: var(--muted);
+    }
+
+    .user-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      min-width: 200px;
+      display: none;
+      z-index: 300;
+    }
+
+    .user-dropdown.show {
+      display: block;
+    }
+
+    .user-dropdown-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .user-dropdown-name {
+      display: block;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    .user-dropdown-email {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    .user-dropdown-item {
+      display: block;
+      padding: 12px 16px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .user-dropdown-item:hover {
+      color: var(--accent);
+      background: rgba(0, 255, 194, 0.05);
+    }
+
+    .user-dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    .logout-btn {
+      color: var(--accent3);
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      z-index: 210;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--accent);
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .hamburger.open span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.open span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .mobile-menu {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 15, 0.97);
+      backdrop-filter: blur(20px);
+      z-index: 190;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      display: none;
+      opacity: 0;
+      transform: translateY(-12px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .mobile-menu.open {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .mobile-menu a {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .mobile-menu a:hover {
+      color: var(--accent);
+    }
+
+    .mobile-menu .nav-cta {
+      font-size: 0.9rem;
+      padding: 12px 32px;
+      color: var(--accent);
+    }
+
+    .hero {
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 110px var(--px) 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: 1px solid rgba(0, 255, 194, 0.3);
+      padding: 6px 14px;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.2s forwards;
+    }
+
+    .hero h1 {
+      font-size: clamp(3rem, 10vw, 6rem);
+      font-weight: 800;
+      line-height: 0.92;
+      letter-spacing: -0.04em;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.4s forwards;
+    }
+
+    .hero h1 .accent {
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-family: var(--mono);
+      font-size: clamp(0.78rem, 2vw, 1rem);
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.6s forwards;
+    }
+
+    .pricing {
+      padding: 0 var(--px) clamp(60px, 10vw, 120px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .pricing h2 {
+      font-size: clamp(2rem, 5vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 48px;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+
+    .plan {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 44px 36px;
+      position: relative;
+      transition: border-color 0.3s;
+    }
+
+    .plan:hover {
+      border-color: var(--accent);
+    }
+
+    .plan.featured-plan {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(0, 255, 194, 0.05) 0%, var(--card) 60%);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -1px;
+      left: 36px;
+      background: var(--accent);
+      color: var(--bg);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+    }
+
+    .plan-name {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .plan-price {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .plan-price span {
+      font-size: 1.3rem;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .plan-cycle {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    .plan-features {
+      list-style: none;
+      margin-bottom: 36px;
+    }
+
+    .plan-features li {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .plan-features li::before {
+      content: '▸';
+      color: var(--accent);
+      font-size: 0.62rem;
+    }
+
+    .plan-features li.active {
+      color: var(--text);
+    }
+
+    .plan-btn {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      text-align: center;
+      padding: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .plan.featured-plan .plan-btn {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    .plan-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .plan.featured-plan .plan-btn:hover {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: clamp(40px, 8vw, 60px) var(--px);
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-brand .logo {
+      margin-bottom: 14px;
+      display: flex;
+    }
+
+    .footer-desc {
+      font-family: var(--mono);
+      font-size: 0.73rem;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 280px;
+    }
+
+    .footer-col h4 {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 18px;
+    }
+
+    .footer-col ul {
+      list-style: none;
+    }
+
+    .footer-col ul li {
+      margin-bottom: 10px;
+    }
+
+    .footer-col ul li a {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-col ul li a:hover {
+      color: var(--accent);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding: 20px var(--px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-bottom p {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    .footer-tech {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-tech span {
+      color: var(--accent);
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+
+    @media (max-width: 1024px) {
+      footer {
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+      }
+
+      .footer-desc {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .nav-links,
+      .nav-cta {
+        display: none;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .plans-grid {
+        grid-template-columns: 1fr;
+        max-width: 460px;
+        margin: 0 auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        padding-top: 96px;
+        min-height: 50vh;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.6rem, 13vw, 3.8rem);
+        margin-bottom: 18px;
+      }
+
+      .pricing h2 {
+        margin-bottom: 36px;
+      }
+
+      .plans-grid {
+        max-width: 100%;
+      }
+
+      .plan {
+        padding: 32px 22px;
+      }
+
+      footer {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <nav id="nav">
+    <a href="index.html" class="logo">
+      <span class="logo-bracket">[</span>ByteShelf<span class="logo-bracket">]</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html#books">Library</a></li>
+      <li><a href="index.html#how">How it works</a></li>
+      <li><a href="pricing.html">Pricing</a></li>
+      <li><a href="#">Blog</a></li>
+    </ul>
+    <div class="nav-auth" id="navAuth">
+      <a href="login.html" class="nav-cta nav-login-btn">Get Started</a>
+      <div class="user-menu" id="userMenu" style="display: none;">
+        <button class="user-menu-btn" id="userMenuBtn">
+          <span class="user-avatar" id="userAvatar">U</span>
+          <span class="user-name-display" id="userNameDisplay">User</span>
+          <span class="user-arrow">▼</span>
+        </button>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="user-dropdown-header">
+            <span class="user-dropdown-name" id="userDropdownName">User</span>
+            <span class="user-dropdown-email" id="userDropdownEmail">user@email.com</span>
+          </div>
+          <a href="#" class="user-dropdown-item">My Library</a>
+          <a href="#" class="user-dropdown-item">Account Settings</a>
+          <a href="#" class="user-dropdown-item">Billing</a>
+          <div class="user-dropdown-divider"></div>
+          <a href="#" class="user-dropdown-item logout-btn" id="logoutBtn">Sign Out</a>
+        </div>
+      </div>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="login.html" class="mobile-link">Library</a>
+    <a href="index.html#how" class="mobile-link">How it works</a>
+    <a href="pricing.html" class="mobile-link">Pricing</a>
+    <a href="login.html" class="mobile-link">Blog</a>
+    <a href="login.html" class="nav-cta">Get Started</a>
+  </div>
+
+  <section class="hero">
+    <div class="hero-tag">// Pricing Plans</div>
+    <h1>Choose your<br><span class="accent">plan.</span></h1>
+    <p class="hero-sub">
+      Start free and upgrade when you're ready. Cancel anytime.<br>
+      All plans include access to our community forum.
+    </p>
+  </section>
+
+  <section class="pricing">
+    <div class="plans-grid">
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price"><span>$</span>0</div>
+        <div class="plan-cycle">forever free</div>
+        <ul class="plan-features">
+          <li class="active">5 free books/month</li>
+          <li class="active">Preview any book</li>
+          <li class="active">Community forum access</li>
+          <li>Unlimited downloads</li>
+          <li>Offline reading</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="login.html" class="plan-btn">Get Started Free</a>
+      </div>
+      <div class="plan featured-plan">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-name">Scholar</div>
+        <div class="plan-price"><span>$</span>14<span>/mo</span></div>
+        <div class="plan-cycle">billed monthly</div>
+        <ul class="plan-features">
+          <li class="active">Unlimited downloads</li>
+          <li class="active">Offline reading</li>
+          <li class="active">New releases first</li>
+          <li class="active">Study notes included</li>
+          <li class="active">Priority support</li>
+          <li>Team workspace</li>
+        </ul>
+        <a href="login.html" class="plan-btn">Start Free Trial</a>
+      </div>
+      <div class="plan">
+        <div class="plan-name">Team</div>
+        <div class="plan-price"><span>$</span>49<span>/mo</span></div>
+        <div class="plan-cycle">up to 10 students</div>
+        <ul class="plan-features">
+          <li class="active">Everything in Scholar</li>
+          <li class="active">Team workspace</li>
+          <li class="active">Shared reading lists</li>
+          <li class="active">Usage analytics</li>
+          <li class="active">Custom content requests</li>
+          <li class="active">Dedicated support</li>
+        </ul>
+        <a href="login.html" class="plan-btn">Contact Sales</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-brand">
+      <a href="index.html" class="logo"><span class="logo-bracket">[</span>ByteShelf<span class="logo-bracket">]</span></a>
+      <p class="footer-desc">The premium PDF library for computer science students. Built with NestJS. Curated by CS
+        graduates.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Library</h4>
+      <ul>
+        <li><a href="#">Algorithms</a></li>
+        <li><a href="#">Machine Learning</a></li>
+        <li><a href="#">System Design</a></li>
+        <li><a href="#">Cybersecurity</a></li>
+        <li><a href="#">Databases</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <ul>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">For Teams</a></li>
+        <li><a href="#">API</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Terms</a></li>
+      </ul>
+    </div>
+  </footer>
+  <div class="footer-bottom">
+    <p>© 2026 ByteShelf. All rights reserved.</p>
+    <div class="footer-tech">Powered by <span>NestJS</span> + <span>PostgreSQL</span></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    // ── Auth User Menu ──
+    const userMenu = document.getElementById('userMenu');
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    const navLoginBtn = document.querySelector('.nav-login-btn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    function updateAuthUI() {
+      const user = Auth.getUser();
+      const isLoggedIn = Auth.isLoggedIn();
+
+      if (isLoggedIn && user) {
+        if (navLoginBtn) navLoginBtn.style.display = 'none';
+        if (userMenu) userMenu.style.display = 'flex';
+        
+        const userName = user.name || user.email.split('@')[0];
+        const userInitial = userName.charAt(0).toUpperCase();
+        
+        document.getElementById('userAvatar').textContent = userInitial;
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('userDropdownName').textContent = userName;
+        document.getElementById('userDropdownEmail').textContent = user.email;
+      } else {
+        if (navLoginBtn) navLoginBtn.style.display = 'inline-block';
+        if (userMenu) userMenu.style.display = 'none';
+      }
+    }
+
+    if (userMenuBtn) {
+      userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('show');
+      });
+    }
+
+    document.addEventListener('click', () => {
+      if (userDropdown) userDropdown.classList.remove('show');
+    });
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        Auth.logout();
+      });
+    }
+
+    updateAuthUI();
+
+    if (window.matchMedia('(hover: hover)').matches) {
+      const cursor = document.getElementById('cursor');
+      const ring = document.getElementById('cursorRing');
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => {
+        mx = e.clientX; my = e.clientY;
+        cursor.style.transform = `translate(${mx - 6}px, ${my - 6}px)`;
+      });
+      function animateRing() {
+        rx += (mx - rx - 20) * 0.12;
+        ry += (my - ry - 20) * 0.12;
+        ring.style.transform = `translate(${rx}px, ${ry}px)`;
+        requestAnimationFrame(animateRing);
+      }
+      animateRing();
+      document.querySelectorAll('a, button, .plan').forEach(el => {
+        el.addEventListener('mouseenter', () => { ring.style.width = '60px'; ring.style.height = '60px'; ring.style.opacity = '0.6'; });
+        el.addEventListener('mouseleave', () => { ring.style.width = '40px'; ring.style.height = '40px'; ring.style.opacity = '1'; });
+      });
+    }
+
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
+
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    hamburger.addEventListener('click', () => {
+      const open = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('open', open);
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
+    document.querySelectorAll('.mobile-link, .mobile-menu .nav-cta').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Add Book - ByteShelf Admin{% endblock %}
+{% block header %}Add New Book{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('books') }}" class="btn btn-secondary">← Back to Books</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Book Information</h3>
+        <p class="card-subtitle">Fill in the details for the new book</p>
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- Left Column -->
+            <div>
+                <div class="form-group">
+                    <label class="form-label" for="title">Book Title *</label>
+                    <input type="text" id="title" name="title" class="form-input" required placeholder="e.g., Introduction to Algorithms">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="author">Author *</label>
+                    <input type="text" id="author" name="author" class="form-input" required placeholder="e.g., Thomas H. Cormen">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="category">Category *</label>
+                    <select id="category" name="category" class="form-select" required>
+                        <option value="">Select a category</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="price">Price ($) *</label>
+                        <input type="number" id="price" name="price" class="form-input" step="0.01" min="0" required placeholder="9.99">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="pages">Pages *</label>
+                        <input type="number" id="pages" name="pages" class="form-input" min="1" required placeholder="500">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="badge">Badge (Optional)</label>
+                    <select id="badge" name="badge" class="form-select">
+                        <option value="">No badge</option>
+                        <option value="Bestseller">Bestseller</option>
+                        <option value="New">New</option>
+                        <option value="Hot">Hot</option>
+                        <option value="Popular">Popular</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div>
+                <div class="form-group">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea id="description" name="description" class="form-textarea" rows="6" placeholder="Brief description of the book content..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="file">PDF File</label>
+                    <input type="file" id="file" name="file" class="form-input form-file" accept=".pdf,.doc,.docx,.txt">
+                    <small style="color: var(--muted); font-size: 0.8rem;">
+                        Supported formats: PDF, DOC, DOCX, TXT (Max: 16MB)
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" name="featured" class="form-checkbox">
+                        <span class="form-label" style="margin: 0;">Featured Book</span>
+                    </label>
+                    <small style="color: var(--muted); font-size: 0.8rem;">
+                        Featured books appear prominently on the homepage
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+            <button type="submit" class="btn btn-primary">Add Book</button>
+            <a href="{{ url_for('books') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<!-- Preview Section -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Preview</h3>
+        <p class="card-subtitle">How this book will appear on the website</p>
+    </div>
+    
+    <div style="background: var(--surface); padding: 20px; border: 1px solid var(--border);">
+        <div style="display: flex; gap: 20px; align-items: start;">
+            <div style="width: 120px; height: 160px; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white;">
+                📘
+            </div>
+            <div style="flex: 1;">
+                <div style="color: var(--accent); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 8px;" id="preview-category">Category</div>
+                <h4 style="font-size: 1.1rem; margin-bottom: 6px;" id="preview-title">Book Title</h4>
+                <div style="color: var(--muted); font-size: 0.9rem; margin-bottom: 16px;" id="preview-author">Author Name</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border);">
+                    <span style="color: var(--accent); font-weight: 700;" id="preview-price">$0.00</span>
+                    <span style="color: var(--muted); font-size: 0.8rem;" id="preview-pages">0 pages</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview
+document.addEventListener('DOMContentLoaded', function() {
+    const titleInput = document.getElementById('title');
+    const authorInput = document.getElementById('author');
+    const categorySelect = document.getElementById('category');
+    const priceInput = document.getElementById('price');
+    const pagesInput = document.getElementById('pages');
+    
+    const previewTitle = document.getElementById('preview-title');
+    const previewAuthor = document.getElementById('preview-author');
+    const previewCategory = document.getElementById('preview-category');
+    const previewPrice = document.getElementById('preview-price');
+    const previewPages = document.getElementById('preview-pages');
+    
+    function updatePreview() {
+        previewTitle.textContent = titleInput.value || 'Book Title';
+        previewAuthor.textContent = authorInput.value || 'Author Name';
+        previewCategory.textContent = categorySelect.options[categorySelect.selectedIndex].text || 'Category';
+        previewPrice.textContent = '$' + (priceInput.value || '0.00');
+        previewPages.textContent = (pagesInput.value || '0') + ' pages';
+    }
+    
+    titleInput.addEventListener('input', updatePreview);
+    authorInput.addEventListener('input', updatePreview);
+    categorySelect.addEventListener('change', updatePreview);
+    priceInput.addEventListener('input', updatePreview);
+    pagesInput.addEventListener('input', updatePreview);
+});
+</script>
+{% endblock %}

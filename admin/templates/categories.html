@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - ByteShelf Admin{% endblock %}
+{% block header %}Categories Management{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 400px; gap: 24px;">
+    <!-- Categories List -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">All Categories ({{ categories|length }})</h3>
+            <p class="card-subtitle">Manage book categories</p>
+        </div>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Icon</th>
+                    <th>Name</th>
+                    <th>ID</th>
+                    <th>Color</th>
+                    <th>Books</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in categories %}
+                <tr>
+                    <td style="font-size: 1.2rem;">{{ cat.icon }}</td>
+                    <td><strong>{{ cat.name }}</strong></td>
+                    <td><code style="background: var(--surface); padding: 2px 6px; font-size: 0.8rem;">{{ cat.id }}</code></td>
+                    <td>
+                        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: 
+                            {% if cat.color == 'purple' %}var(--accent2)
+                            {% elif cat.color == 'red' %}var(--accent3)
+                            {% elif cat.color == 'yellow' %}#ffcc00
+                            {% else %}var(--accent){% endif %};"></span>
+                        {{ cat.color }}
+                    </td>
+                    <td>
+                        {% set book_count = data.books | selectattr('category', 'equalto', cat.id) | list | length %}
+                        {{ book_count }} books
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Add Category Form -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Add New Category</h3>
+            <p class="card-subtitle">Create a new book category</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('add_category') }}">
+            <div class="form-group">
+                <label class="form-label" for="name">Category Name *</label>
+                <input type="text" id="name" name="name" class="form-input" required placeholder="e.g., Web Development">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="id">Category ID *</label>
+                <input type="text" id="id" name="id" class="form-input" required placeholder="e.g., webdev" pattern="[a-z0-9-]+" title="Only lowercase letters, numbers, and hyphens">
+                <small style="color: var(--muted); font-size: 0.8rem;">
+                    Used in URLs. Only lowercase letters, numbers, and hyphens.
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="icon">Icon *</label>
+                <input type="text" id="icon" name="icon" class="form-input" required placeholder="🌐" maxlength="2">
+                <small style="color: var(--muted); font-size: 0.8rem;">
+                    Single emoji character
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="color">Color Theme</label>
+                <select id="color" name="color" class="form-select">
+                    <option value="default">Default (Green)</option>
+                    <option value="purple">Purple</option>
+                    <option value="red">Red</option>
+                    <option value="yellow">Yellow</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Add Category</button>
+        </form>
+        
+        <!-- Preview -->
+        <div style="margin-top: 24px; padding: 16px; background: var(--surface); border: 1px solid var(--border);">
+            <h4 style="margin-bottom: 12px; font-size: 0.9rem; color: var(--muted);">Preview:</h4>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--card); border: 1px solid var(--border);">
+                <span id="preview-icon" style="font-size: 1.5rem;">🌐</span>
+                <div>
+                    <div id="preview-name" style="font-weight: 600;">Category Name</div>
+                    <div style="font-size: 0.8rem; color: var(--muted);">0 books</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview for category form
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('name');
+    const idInput = document.getElementById('id');
+    const iconInput = document.getElementById('icon');
+    
+    const previewName = document.getElementById('preview-name');
+    const previewIcon = document.getElementById('preview-icon');
+    
+    function updatePreview() {
+        previewName.textContent = nameInput.value || 'Category Name';
+        previewIcon.textContent = iconInput.value || '🌐';
+    }
+    
+    // Auto-generate ID from name
+    nameInput.addEventListener('input', function() {
+        if (!idInput.value || idInput.dataset.auto !== 'false') {
+            const autoId = this.value.toLowerCase()
+                .replace(/[^a-z0-9\s]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+            idInput.value = autoId;
+            idInput.dataset.auto = 'true';
+        }
+        updatePreview();
+    });
+    
+    idInput.addEventListener('input', function() {
+        this.dataset.auto = 'false';
+    });
+    
+    iconInput.addEventListener('input', updatePreview);
+});
+</script>
+{% endblock %}

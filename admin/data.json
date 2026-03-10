@@ -1,0 +1,86 @@
+{
+  "books": [
+    {
+      "id": "clrs-algorithms",
+      "title": "Introduction to Algorithms (CLRS)",
+      "author": "Cormen, Leiserson, Rivest, Stein",
+      "category": "algorithms",
+      "price": 12.99,
+      "pages": 1312,
+      "description": "The comprehensive guide to algorithms and data structures. Covers fundamental algorithms, data structures, and advanced topics in computer science.",
+      "badge": "Bestseller",
+      "filename": null,
+      "created_at": "2026-03-08T01:00:00",
+      "featured": true
+    },
+    {
+      "id": "deep-learning-goodfellow",
+      "title": "Deep Learning by Goodfellow",
+      "author": "Goodfellow, Bengio, Courville",
+      "category": "ml",
+      "price": 9.99,
+      "pages": 800,
+      "description": "Comprehensive introduction to deep learning, covering mathematical foundations, practical techniques, and research directions.",
+      "badge": "New",
+      "filename": null,
+      "created_at": "2026-03-08T01:15:00",
+      "featured": true
+    },
+    {
+      "id": "web-app-hackers-handbook",
+      "title": "The Web Application Hacker's Handbook",
+      "author": "Stuttard, Pinto",
+      "category": "security",
+      "price": 8.99,
+      "pages": 912,
+      "description": "Essential guide to web application security testing and vulnerability assessment.",
+      "badge": "Hot",
+      "filename": null,
+      "created_at": "2026-03-08T01:30:00",
+      "featured": true
+    }
+  ],
+  "categories": [
+    {
+      "id": "algorithms",
+      "name": "Algorithms & DSA",
+      "icon": "⚡",
+      "color": "default"
+    },
+    {
+      "id": "ml",
+      "name": "AI & Machine Learning",
+      "icon": "🧠",
+      "color": "purple"
+    },
+    {
+      "id": "security",
+      "name": "Cybersecurity",
+      "icon": "🔒",
+      "color": "red"
+    },
+    {
+      "id": "system",
+      "name": "System Design",
+      "icon": "🌐",
+      "color": "yellow"
+    },
+    {
+      "id": "database",
+      "name": "Databases",
+      "icon": "🗄️",
+      "color": "default"
+    },
+    {
+      "id": "networks",
+      "name": "Computer Networks",
+      "icon": "🌐",
+      "color": "purple"
+    }
+  ],
+  "stats": {
+    "total_books": 3,
+    "total_students": 12000,
+    "total_categories": 6
+  }
+}

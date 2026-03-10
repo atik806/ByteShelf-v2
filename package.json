@@ -1,0 +1,79 @@
+{
+  "name": "byteshelf-monorepo",
+  "version": "1.0.1",
+  "description": "ByteShelf - Complete CS Knowledge Platform with Admin Panel",
+  "private": true,
+  "workspaces": [
+    "All code",
+    "admin"
+  ],
+  "scripts": {
+    "start": "npm run start:website",
+    "start:website": "cd \"All code\" && npm run start",
+    "start:admin": "cd admin && npm run start",
+    "start:all": "concurrently \"npm run start:website\" \"npm run start:admin\"",
+    "dev": "npm run start:all",
+    "install:website": "cd \"All code\" && npm run install-backend",
+    "install:admin": "cd admin && npm run install",
+    "install:all": "npm run install:website && npm run install:admin",
+    "test": "npm run test:website && npm run test:admin",
+    "test:website": "cd \"All code\" && npm test",
+    "test:admin": "cd admin && npm test",
+    "health": "npm run health:website && npm run health:admin",
+    "health:website": "curl -f http://localhost:5000/health || echo 'Website not running'",
+    "health:admin": "curl -f http://localhost:5001/health || echo 'Admin not running'",
+    "backup": "npm run backup:admin",
+    "backup:admin": "cd admin && npm run backup-data",
+    "clean": "npm run clean:website && npm run clean:admin",
+    "clean:website": "cd \"All code/backend\" && rm -rf __pycache__",
+    "clean:admin": "cd admin && npm run clean",
+    "version:patch": "npm version patch && cd \"All code\" && npm version patch && cd ../admin && npm version patch",
+    "version:minor": "npm version minor && cd \"All code\" && npm version minor && cd ../admin && npm version minor",
+    "version:major": "npm version major && cd \"All code\" && npm version major && cd ../admin && npm version major"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/byteshelf-platform.git"
+  },
+  "keywords": [
+    "education",
+    "computer-science",
+    "books",
+    "pdf",
+    "learning",
+    "flask",
+    "python",
+    "admin-panel",
+    "content-management",
+    "monorepo",
+    "student-platform"
+  ],
+  "author": {
+    "name": "ByteShelf Team",
+    "email": "team@byteshelf.com",
+    "url": "https://byteshelf.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-username/byteshelf-platform/issues"
+  },
+  "homepage": "https://byteshelf.com",
+  "engines": {
+    "node": ">=14.0.0",
+    "python": ">=3.8.0",
+    "npm": ">=6.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "config": {
+    "website_port": 5000,
+    "admin_port": 5001,
+    "python_version": "3.11"
+  },
+  "directories": {
+    "website": "All code",
+    "admin": "admin",
+    "docs": "docs"
+  }
+}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ByteShelf Admin{% endblock %}
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ data.stats.total_books }}</div>
+        <div class="stat-label">Total Books</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ data.stats.total_students }}</div>
+        <div class="stat-label">Students</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ data.categories|length }}</div>
+        <div class="stat-label">Categories</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ data.books|selectattr('featured')|list|length }}</div>
+        <div class="stat-label">Featured Books</div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Recent Books</h3>
+        <p class="card-subtitle">Latest additions to the library</p>
+    </div>
+    
+    {% if data.books %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in data.books[-5:] %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.category }}</td>
+                <td>${{ "%.2f"|format(book.price) }}</td>
+                <td>
+                    {% if book.featured %}
+                        <span style="color: var(--accent)">Featured</span>
+                    {% else %}
+                        <span style="color: var(--muted)">Regular</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="table-actions">
+                        <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-secondary btn-small">Edit</a>
+                        <a href="{{ url_for('delete_book', book_id=book.id) }}" class="btn btn-danger btn-small" onclick="return confirm('Are you sure?')">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--muted); text-align: center; padding: 40px;">No books added yet. <a href="{{ url_for('add_book') }}" style="color: var(--accent)">Add your first book</a></p>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Quick Actions</h3>
+        <p class="card-subtitle">Common administrative tasks</p>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <a href="{{ url_for('add_book') }}" class="btn btn-primary" style="text-align: center; padding: 20px;">
+            📚 Add New Book
+        </a>
+        <a href="{{ url_for('categories') }}" class="btn btn-secondary" style="text-align: center; padding: 20px;">
+            🏷️ Manage Categories
+        </a>
+        <a href="#" class="btn btn-secondary" style="text-align: center; padding: 20px;">
+            👥 View Users
+        </a>
+        <a href="http://localhost:5000" target="_blank" class="btn btn-secondary" style="text-align: center; padding: 20px;">
+            🌐 View Website
+        </a>
+    </div>
+</div>
+{% endblock %}

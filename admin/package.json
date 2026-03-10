@@ -1,0 +1,87 @@
+{
+  "name": "byteshelf-admin",
+  "version": "1.0.0",
+  "description": "ByteShelf Admin Panel - Content management system for the ByteShelf CS knowledge platform",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "dev": "python run_admin.py",
+    "install": "pip install -r requirements.txt",
+    "test": "echo \"No tests specified yet\" && exit 0",
+    "lint": "echo \"No linting configured yet\" && exit 0",
+    "build": "echo \"No build process needed\" && exit 0",
+    "serve": "npm run start",
+    "health": "curl -f http://localhost:5001/health",
+    "clean": "rm -rf __pycache__ uploads/*.tmp",
+    "backup-data": "cp data.json data.backup.json",
+    "restore-data": "cp data.backup.json data.json",
+    "reset-data": "echo '{}' > data.json",
+    "stats": "python -c \"import json; data=json.load(open('data.json')); print(f'Books: {len(data.get(\\\"books\\\", []))}, Categories: {len(data.get(\\\"categories\\\", []))}')\"",
+    "validate-data": "python -c \"import json; json.load(open('data.json')); print('Data file is valid JSON')\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/byteshelf-platform.git",
+    "directory": "admin"
+  },
+  "keywords": [
+    "admin-panel",
+    "content-management",
+    "flask",
+    "python",
+    "file-upload",
+    "book-management",
+    "education-admin",
+    "cms",
+    "dashboard",
+    "byteshelf"
+  ],
+  "author": {
+    "name": "ByteShelf Team",
+    "email": "admin@byteshelf.com",
+    "url": "https://byteshelf.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-username/byteshelf-platform/issues"
+  },
+  "homepage": "https://github.com/your-username/byteshelf-platform/tree/main/admin#readme",
+  "engines": {
+    "python": ">=3.8.0"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "config": {
+    "port": 5001,
+    "upload_max_size": "16MB",
+    "allowed_extensions": ["pdf", "doc", "docx", "txt"],
+    "data_file": "data.json"
+  },
+  "directories": {
+    "lib": ".",
+    "doc": "README.md",
+    "test": "tests"
+  },
+  "files": [
+    "templates/",
+    "static/",
+    "uploads/",
+    "app.py",
+    "run_admin.py",
+    "requirements.txt",
+    "README.md",
+    "data.json"
+  ],
+  "private": false,
+  "python": {
+    "requirements": "requirements.txt",
+    "main": "app.py"
+  },
+  "flask": {
+    "app": "app.py",
+    "env": "development",
+    "debug": true,
+    "host": "0.0.0.0",
+    "port": 5001
+  }
+}

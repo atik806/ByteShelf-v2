@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — ByteShelf</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --card: #16161f;
+      --border: #2a2a3a;
+      --accent: #00ffc2;
+      --accent2: #6e44ff;
+      --accent3: #ff4466;
+      --text: #e8e8f0;
+      --muted: #7070a0;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Syne', sans-serif;
+      --px: clamp(20px, 5vw, 60px);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    .cursor,
+    .cursor-ring {
+      display: none;
+    }
+
+    @media (hover: hover) {
+      body {
+        cursor: none;
+      }
+
+      .cursor {
+        width: 12px;
+        height: 12px;
+        background: var(--accent);
+        border-radius: 50%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 9999;
+        mix-blend-mode: difference;
+        display: block;
+      }
+
+      .cursor-ring {
+        width: 40px;
+        height: 40px;
+        border: 1px solid rgba(0, 255, 194, 0.4);
+        border-radius: 50%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 9998;
+        transition: width 0.2s, height 0.2s, opacity 0.2s;
+        display: block;
+      }
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9990;
+      opacity: 0.6;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(0, 255, 194, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 194, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 18px var(--px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 200;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s, background 0.3s;
+      background: rgba(10, 10, 15, 0.9);
+      backdrop-filter: blur(16px);
+      border-color: var(--border);
+    }
+
+    .logo {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .logo-bracket {
+      color: var(--accent2);
+      font-size: 1.3rem;
+    }
+
+    .nav-back {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-back:hover {
+      color: var(--accent);
+    }
+
+    .nav-back::before {
+      content: '←';
+    }
+
+    .checkout-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 120px var(--px) 60px;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 48px;
+    }
+
+    .checkout-main h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .checkout-subtitle {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    .form-section {
+      margin-bottom: 32px;
+    }
+
+    .form-section-title {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .form-section-title::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-group input::placeholder {
+      color: var(--muted);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .order-summary {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 32px;
+      height: fit-content;
+      position: sticky;
+      top: 100px;
+    }
+
+    .order-summary h3 {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .plan-summary {
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .plan-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .plan-price {
+      font-family: var(--mono);
+      font-size: 1.5rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .plan-price span {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .plan-desc {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+
+    .summary-row .label {
+      color: var(--muted);
+    }
+
+    .summary-total {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+
+    .summary-total .label {
+      font-size: 0.75rem;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .summary-total .value {
+      font-size: 1.3rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 16px 32px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-block;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 255, 194, 0.3);
+    }
+
+    .secure-note {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .secure-note::before {
+      content: '🔒';
+    }
+
+    .success-message {
+      display: none;
+      text-align: center;
+      padding: 48px;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 24px;
+    }
+
+    .success-message h2 {
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+
+    .success-message p {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 860px) {
+      .checkout-container {
+        grid-template-columns: 1fr;
+      }
+
+      .order-summary {
+        position: static;
+        order: -1;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .checkout-container {
+        padding-top: 100px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <nav>
+    <a href="index.html" class="logo">
+      <span class="logo-bracket">[</span>ByteShelf<span class="logo-bracket">]</span>
+    </a>
+    <a href="pricing.html" class="nav-back">Back to Pricing</a>
+  </nav>
+
+  <div class="checkout-container">
+    <div class="checkout-main" id="checkoutForm">
+      <h1>Checkout</h1>
+      <p class="checkout-subtitle">Complete your purchase to unlock unlimited access.</p>
+
+      <div class="form-section">
+        <div class="form-section-title">Account Details</div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="name" placeholder="John Doe" required />
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Payment Information</div>
+        <div class="form-group">
+          <label>Card Number</label>
+          <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" required />
+          </div>
+          <div class="form-group">
+            <label>CVC</label>
+            <input type="text" id="cvc" placeholder="123" maxlength="3" required />
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="processCheckout()">Complete Purchase</button>
+      <p class="secure-note">Your payment is secure and encrypted</p>
+    </div>
+
+    <div class="order-summary">
+      <h3>Order Summary</h3>
+      <div class="plan-summary">
+        <div class="plan-name" id="summaryPlanName">Scholar</div>
+        <div class="plan-price" id="summaryPlanPrice">$14<span>/mo</span></div>
+        <div class="plan-desc" id="summaryPlanDesc">Billed monthly</div>
+      </div>
+      <div class="summary-row">
+        <span class="label">Subtotal</span>
+        <span id="subtotal">$14.00</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Tax</span>
+        <span id="tax">$0.00</span>
+      </div>
+      <div class="summary-row summary-total">
+        <span class="label">Total</span>
+        <span class="value" id="total">$14.00</span>
+      </div>
+    </div>
+
+    <div class="success-message" id="successMessage">
+      <div class="success-icon">✓</div>
+      <h2>Welcome to ByteShelf!</h2>
+      <p>Your account has been created. Check your email for confirmation.</p>
+      <a href="index.html" class="btn-primary">Start Learning</a>
+    </div>
+  </div>
+
+  <script>
+    const plans = {
+      starter: { name: 'Starter', price: 0, period: 'forever free', desc: 'No billing required' },
+      scholar: { name: 'Scholar', price: 14, period: '/mo', desc: 'Billed monthly' },
+      team: { name: 'Team', price: 49, period: '/mo', desc: 'Up to 10 students' }
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedPlan = urlParams.get('plan') || 'scholar';
+    const plan = plans[selectedPlan] || plans.scholar;
+
+    document.getElementById('summaryPlanName').textContent = plan.name;
+    document.getElementById('summaryPlanPrice').innerHTML = plan.price === 0 ? '<span>FREE</span>' : `<span>$</span>${plan.price}<span>${plan.period}</span>`;
+    document.getElementById('summaryPlanDesc').textContent = plan.desc;
+
+    const subtotal = plan.price;
+    const tax = 0;
+    const total = subtotal + tax;
+
+    document.getElementById('subtotal').textContent = subtotal === 0 ? 'FREE' : `$${subtotal.toFixed(2)}`;
+    document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+    document.getElementById('total').textContent = subtotal === 0 ? 'FREE' : `$${total.toFixed(2)}`;
+
+    document.getElementById('cardNumber').addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+      let formatted = value.match(/.{1,4}/g)?.join(' ') || '';
+      e.target.value = formatted;
+    });
+
+    document.getElementById('expiry').addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2);
+      }
+      e.target.value = value;
+    });
+
+    function processCheckout() {
+      const email = document.getElementById('email').value;
+      const name = document.getElementById('name').value;
+      const cardNumber = document.getElementById('cardNumber').value;
+      const expiry = document.getElementById('expiry').value;
+      const cvc = document.getElementById('cvc').value;
+
+      if (!email || !name || !cardNumber || !expiry || !cvc) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      if (plan.price === 0) {
+        document.getElementById('checkoutForm').style.display = 'none';
+        document.querySelector('.order-summary').style.display = 'none';
+        document.getElementById('successMessage').classList.add('show');
+        return;
+      }
+
+      document.getElementById('checkoutForm').style.display = 'none';
+      document.querySelector('.order-summary').style.display = 'none';
+      document.getElementById('successMessage').classList.add('show');
+    }
+
+    if (window.matchMedia('(hover: hover)').matches) {
+      const cursor = document.getElementById('cursor');
+      const ring = document.getElementById('cursorRing');
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => {
+        mx = e.clientX; my = e.clientY;
+        cursor.style.transform = `translate(${mx - 6}px, ${my - 6}px)`;
+      });
+      function animateRing() {
+        rx += (mx - rx - 20) * 0.12;
+        ry += (my - ry - 20) * 0.12;
+        ring.style.transform = `translate(${rx}px, ${ry}px)`;
+        requestAnimationFrame(animateRing);
+      }
+      animateRing();
+      document.querySelectorAll('a, button, input, select').forEach(el => {
+        el.addEventListener('mouseenter', () => { ring.style.width = '60px'; ring.style.height = '60px'; ring.style.opacity = '0.6'; });
+        el.addEventListener('mouseleave', () => { ring.style.width = '40px'; ring.style.height = '40px'; ring.style.opacity = '1'; });
+      });
+    }
+  </script>
+</body>
+
+</html>

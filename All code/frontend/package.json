@@ -1,0 +1,81 @@
+{
+  "name": "byteshelf-frontend",
+  "version": "1.0.0",
+  "description": "ByteShelf CS Knowledge Platform - Frontend website with modern design and responsive layout",
+  "main": "index.html",
+  "scripts": {
+    "start": "python ../backend/app.py",
+    "dev": "npm run start",
+    "build": "echo 'No build process needed for static HTML'",
+    "serve": "cd ../backend && python app.py",
+    "test": "echo 'No tests specified yet' && exit 0",
+    "lint": "echo 'No linting configured yet' && exit 0",
+    "validate-html": "echo 'HTML validation not configured' && exit 0",
+    "optimize": "echo 'Asset optimization not configured' && exit 0",
+    "preview": "python -m http.server 3000",
+    "health": "curl -f http://localhost:5000/health"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/byteshelf-platform.git",
+    "directory": "frontend"
+  },
+  "keywords": [
+    "education", 
+    "cs", 
+    "books", 
+    "pdf", 
+    "learning",
+    "frontend",
+    "html",
+    "css",
+    "javascript",
+    "responsive",
+    "dark-theme",
+    "student-platform"
+  ],
+  "author": {
+    "name": "ByteShelf Team",
+    "email": "frontend@byteshelf.com",
+    "url": "https://byteshelf.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-username/byteshelf-platform/issues"
+  },
+  "homepage": "https://byteshelf.com",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "config": {
+    "port": 5000,
+    "backend_port": 5000,
+    "admin_port": 5001
+  },
+  "directories": {
+    "lib": "assets",
+    "doc": "README.md"
+  },
+  "files": [
+    "index.html",
+    "assets/",
+    "package.json",
+    "README.md"
+  ],
+  "private": false,
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "features": {
+    "responsive_design": true,
+    "dark_theme": true,
+    "custom_cursor": true,
+    "smooth_animations": true,
+    "mobile_navigation": true,
+    "accessibility": "partial"
+  }
+}

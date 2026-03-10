@@ -1,0 +1,80 @@
+{
+  "name": "byteshelf-platform",
+  "version": "1.0.0",
+  "description": "ByteShelf - CS Knowledge Platform for students to access premium PDF books and resources",
+  "main": "backend/app.py",
+  "scripts": {
+    "start": "python backend/app.py",
+    "dev": "python run.py",
+    "admin": "python run_admin.py",
+    "install-backend": "cd backend && pip install -r requirements.txt",
+    "install-admin": "cd ../admin && pip install -r requirements.txt",
+    "install-all": "npm run install-backend && npm run install-admin",
+    "test": "echo \"No tests specified yet\" && exit 0",
+    "lint": "echo \"No linting configured yet\" && exit 0",
+    "build": "echo \"No build process needed for static HTML\" && exit 0",
+    "serve": "npm run start",
+    "dev-all": "concurrently \"npm run dev\" \"npm run admin\"",
+    "health-check": "curl -f http://localhost:5000/health && curl -f http://localhost:5001/health"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/byteshelf-platform.git"
+  },
+  "keywords": [
+    "education",
+    "computer-science",
+    "books",
+    "pdf",
+    "learning",
+    "flask",
+    "python",
+    "web-platform",
+    "student-resources",
+    "cs-books"
+  ],
+  "author": {
+    "name": "ByteShelf Team",
+    "email": "team@byteshelf.com",
+    "url": "https://byteshelf.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-username/byteshelf-platform/issues"
+  },
+  "homepage": "https://github.com/your-username/byteshelf-platform#readme",
+  "engines": {
+    "node": ">=14.0.0",
+    "python": ">=3.8.0"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "dependencies": {},
+  "config": {
+    "ports": {
+      "frontend": 5000,
+      "admin": 5001
+    },
+    "python": {
+      "version": "3.11"
+    }
+  },
+  "directories": {
+    "lib": "backend",
+    "doc": "docs",
+    "test": "tests"
+  },
+  "files": [
+    "frontend/",
+    "backend/",
+    "README.md",
+    "run.py",
+    "run_admin.py"
+  ],
+  "private": false,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}
