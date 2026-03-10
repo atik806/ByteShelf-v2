@@ -15,6 +15,12 @@ def blog():
     frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'frontend')
     return send_from_directory(frontend_path, 'blog.html')
 
+@main_bp.route('/about')
+def about():
+    """Serve the about page"""
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'frontend')
+    return send_from_directory(frontend_path, 'about.html')
+
 @main_bp.route('/favicon.ico')
 def favicon():
     """Handle favicon requests"""
