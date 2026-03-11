@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session
 import os
 import json
 from datetime import datetime
@@ -8,18 +8,18 @@ import uuid
 app = Flask(__name__)
 app.secret_key = 'admin-secret-key-change-in-production'
 
-# Configuration
+ADMIN_USERNAME = 'admin'
+ADMIN_PASSWORD = 'admin123'
+
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'txt', 'doc', 'docx', 'ppt', 'pptx'}
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
-# Ensure upload directory exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Data storage (in production, use a proper database)
 DATA_FILE = 'data.json'
 
 def load_data():
@@ -38,7 +38,7 @@ def load_data():
         'stats': {
             'total_books': 0,
             'total_students': 12000,
-            'total_categories': 40
+            'total_categories': 4
         }
     }
 
@@ -51,34 +51,65 @@ def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def is_admin_logged_in():
+    """Check if admin is logged in"""
+    return session.get('admin_logged_in') is True
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Admin login"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            session['admin_user'] = {'username': username}
+            flash('Login successful!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid credentials.', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    """Admin logout"""
+    session.clear()
+    flash('Logged out successfully.', 'success')
+    return redirect(url_for('login'))
+
 @app.route('/')
 def dashboard():
     """Admin dashboard"""
+    if not is_admin_logged_in():
+        return redirect(url_for('login'))
     data = load_data()
     return render_template('dashboard.html', data=data)
 
 @app.route('/books')
 def books():
     """Books management page"""
+    if not is_admin_logged_in():
+        return redirect(url_for('login'))
     data = load_data()
     return render_template('books.html', books=data['books'], categories=data['categories'])
 
 @app.route('/books/add', methods=['GET', 'POST'])
 def add_book():
     """Add new book"""
+    if not is_admin_logged_in():
+        return redirect(url_for('login'))
     if request.method == 'POST':
         data = load_data()
         
-        # Handle file upload
         file = request.files.get('file')
         filename = None
         if file and file.filename and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            # Add unique prefix to avoid conflicts
             filename = f"{uuid.uuid4().hex[:8]}_{filename}"
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         
-        # Create book entry
         book = {
             'id': str(uuid.uuid4()),
             'title': request.form['title'],
@@ -106,6 +137,8 @@ def add_book():
 @app.route('/books/edit/<book_id>', methods=['GET', 'POST'])
 def edit_book(book_id):
     """Edit existing book"""
+    if not is_admin_logged_in():
+        return redirect(url_for('login'))
     data = load_data()
     book = next((b for b in data['books'] if b['id'] == book_id), None)
     
@@ -114,10 +147,9 @@ def edit_book(book_id):
         return redirect(url_for('books'))
     
     if request.method == 'POST':
-        # Handle file upload
         file = request.files.get('file')
+        filename = book.get('filename')
         if file and file.filename and allowed_file(file.filename):
-            # Delete old file if exists
             if book.get('filename'):
                 old_path = os.path.join(app.config['UPLOAD_FOLDER'], book['filename'])
                 if os.path.exists(old_path):
@@ -126,20 +158,17 @@ def edit_book(book_id):
             filename = secure_filename(file.filename)
             filename = f"{uuid.uuid4().hex[:8]}_{filename}"
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            book['filename'] = filename
         
-        # Update book data
-        book.update({
-            'title': request.form['title'],
-            'author': request.form['author'],
-            'category': request.form['category'],
-            'price': float(request.form['price']),
-            'pages': int(request.form['pages']),
-            'description': request.form['description'],
-            'badge': request.form.get('badge', ''),
-            'featured': request.form.get('featured') == 'on',
-            'updated_at': datetime.now().isoformat()
-        })
+        book['title'] = request.form['title']
+        book['author'] = request.form['author']
+        book['category'] = request.form['category']
+        book['price'] = float(request.form['price'])
+        book['pages'] = int(request.form['pages'])
+        book['description'] = request.form['description']
+        book['badge'] = request.form.get('badge', '')
+        book['filename'] = filename
+        book['featured'] = request.form.get('featured') == 'on'
+        book['updated_at'] = datetime.now().isoformat()
         
         save_data(data)
         flash('Book updated successfully!', 'success')
@@ -150,11 +179,12 @@ def edit_book(book_id):
 @app.route('/books/delete/<book_id>')
 def delete_book(book_id):
     """Delete book"""
+    if not is_admin_logged_in():
+        return redirect(url_for('login'))
     data = load_data()
     book = next((b for b in data['books'] if b['id'] == book_id), None)
     
     if book:
-        # Delete file if exists
         if book.get('filename'):
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], book['filename'])
             if os.path.exists(file_path):
@@ -172,12 +202,16 @@ def delete_book(book_id):
 @app.route('/categories')
 def categories():
     """Categories management page"""
+    if not is_admin_logged_in():
+        return redirect(url_for('login'))
     data = load_data()
     return render_template('categories.html', categories=data['categories'], data=data)
 
 @app.route('/categories/add', methods=['POST'])
 def add_category():
     """Add new category"""
+    if not is_admin_logged_in():
+        return redirect(url_for('login'))
     data = load_data()
     
     category = {
@@ -188,6 +222,7 @@ def add_category():
     }
     
     data['categories'].append(category)
+    data['stats']['total_categories'] = len(data['categories'])
     save_data(data)
     
     flash('Category added successfully!', 'success')
