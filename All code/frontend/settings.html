@@ -50,9 +50,32 @@
     .btn-secondary { padding: 14px 28px; background: transparent; border: 1px solid var(--accent3); color: var(--accent3); font-family: var(--mono); font-size: 0.75rem; font-weight: 700; border-radius: 8px; cursor: pointer; }
     .danger-zone { border-color: var(--accent3); }
     .danger-zone .card-title { color: var(--accent3); }
+    
+    .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; align-items: center; justify-content: space-between; z-index: 100; }
+    .mobile-menu-btn { background: none; border: none; color: var(--text); cursor: pointer; padding: 8px; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+
+    @media (max-width: 768px) {
+      .mobile-header { display: flex; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; z-index: 100; }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.open { display: block; }
+      .main-content { margin-left: 0; padding: 80px 16px 32px; max-width: 100%; }
+      .page-title { font-size: 1.4rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .card { padding: 16px; }
+    }
   </style>
 </head>
 <body>
+  <div class="mobile-header">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <a href="index.html" style="font-family: var(--mono); color: var(--accent); text-decoration: none; font-size: 1.1rem;"><span style="color: var(--accent2)">[</span>ByteShelf<span style="color: var(--accent2)">]</span></a>
+    <div style="width: 40px;"></div>
+  </div>
+  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo"><a href="index.html"><span class="logo-bracket">[</span>ByteShelf<span class="logo-bracket">]</span></a></div>
@@ -120,6 +143,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/auth.js"></script>
   <script>
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.querySelector('.sidebar-overlay');
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('open');
+    }
+    
     if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; }
     const user = Auth.getUser();
     if (user) {

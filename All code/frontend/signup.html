@@ -477,7 +477,7 @@
       UIController.showLoading(submitBtn);
 
       try {
-        const response = await API.signup(
+        await API.signup(
           firstNameInput.value,
           lastNameInput.value,
           emailInput.value,
@@ -485,10 +485,6 @@
         );
         
         UIController.showToast('Welcome to ByteShelf! Account created successfully.', 'success');
-        
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 500);
         
       } catch (error) {
         UIController.showToast(error.message || 'Signup failed. Please try again.', 'error');

@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session
+from flask_cors import CORS
 import os
 import json
 from datetime import datetime
@@ -18,6 +19,8 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
+CORS(app)
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 DATA_FILE = 'data.json'
@@ -35,11 +38,21 @@ def load_data():
             {'id': 'security', 'name': 'Cybersecurity', 'icon': '🔒', 'color': 'red'},
             {'id': 'system', 'name': 'System Design', 'icon': '🌐', 'color': 'yellow'}
         ],
+        'users': [],
         'stats': {
             'total_books': 0,
-            'total_students': 12000,
-            'total_categories': 4
+            'total_students': 0,
+            'total_categories': 0
         }
+    }
+
+def calculate_stats(data):
+    """Calculate real stats from data"""
+    return {
+        'total_books': len(data['books']),
+        'total_students': len(data.get('users', [])),
+        'total_categories': len(data['categories']),
+        'featured_books': len([b for b in data['books'] if b.get('featured', False)])
     }
 
 def save_data(data):
@@ -85,6 +98,8 @@ def dashboard():
     if not is_admin_logged_in():
         return redirect(url_for('login'))
     data = load_data()
+    stats = calculate_stats(data)
+    data['stats'] = stats
     return render_template('dashboard.html', data=data)
 
 @app.route('/books')
@@ -237,13 +252,89 @@ def uploaded_file(filename):
 def api_stats():
     """API endpoint for statistics"""
     data = load_data()
-    return jsonify(data['stats'])
+    stats = calculate_stats(data)
+    return jsonify(stats)
 
 @app.route('/api/books')
 def api_books():
-    """API endpoint for books"""
+    """API endpoint for all books"""
     data = load_data()
     return jsonify(data['books'])
+
+@app.route('/api/books/<book_id>')
+def api_book(book_id):
+    """API endpoint for single book"""
+    data = load_data()
+    book = next((b for b in data['books'] if b['id'] == book_id), None)
+    if book:
+        return jsonify(book)
+    return jsonify({'error': 'Book not found'}), 404
+
+@app.route('/api/books/featured')
+def api_featured_books():
+    """API endpoint for featured books"""
+    data = load_data()
+    featured = [b for b in data['books'] if b.get('featured', False)]
+    return jsonify(featured)
+
+@app.route('/api/categories')
+def api_categories():
+    """API endpoint for categories"""
+    data = load_data()
+    return jsonify(data['categories'])
+
+@app.route('/api/books/category/<category_id>')
+def api_books_by_category(category_id):
+    """API endpoint for books by category"""
+    data = load_data()
+    books = [b for b in data['books'] if b.get('category') == category_id]
+    return jsonify(books)
+
+@app.route('/api/search')
+def api_search():
+    """API endpoint for searching books"""
+    query = request.args.get('q', '').lower()
+    data = load_data()
+    if query:
+        books = [b for b in data['books'] 
+                 if query in b.get('title', '').lower() 
+                 or query in b.get('author', '').lower()]
+        return jsonify(books)
+    return jsonify(data['books'])
+
+@app.route('/api/register-user', methods=['POST'])
+def register_user():
+    """API endpoint to register a new user"""
+    try:
+        user_data = request.json
+        data = load_data()
+        
+        if 'users' not in data:
+            data['users'] = []
+        
+        existing_user = next((u for u in data['users'] if u.get('email') == user_data.get('email')), None)
+        
+        if not existing_user:
+            new_user = {
+                'id': user_data.get('id', ''),
+                'name': user_data.get('name', ''),
+                'email': user_data.get('email', ''),
+                'plan': user_data.get('plan', 'starter'),
+                'created_at': datetime.now().isoformat()
+            }
+            data['users'].append(new_user)
+            save_data(data)
+            return jsonify({'success': True, 'total_users': len(data['users'])})
+        
+        return jsonify({'success': True, 'total_users': len(data['users']), 'message': 'User already exists'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/users/count')
+def api_users_count():
+    """API endpoint to get total users count"""
+    data = load_data()
+    return jsonify({'total_users': len(data.get('users', []))})
 
 @app.route('/health')
 def health_check():

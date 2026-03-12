@@ -414,10 +414,6 @@
         
         UIController.showToast('Welcome back! Login successful.', 'success');
         
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 500);
-        
       } catch (error) {
         UIController.showToast(error.message || 'Login failed. Please try again.', 'error');
       } finally {

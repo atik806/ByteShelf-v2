@@ -1989,6 +1989,11 @@
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
     // ── Auth User Menu ──
+    // Redirect logged-in users to dashboard
+    if (Auth.isLoggedIn()) {
+      window.location.href = 'dashboard.html';
+    }
+    
     const userMenu = document.getElementById('userMenu');
     const userMenuBtn = document.getElementById('userMenuBtn');
     const userDropdown = document.getElementById('userDropdown');

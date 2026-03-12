@@ -3,11 +3,13 @@ const Auth = {
   USER_KEY: 'byteshelf_user',
   SESSION_DURATION: 24 * 60 * 60 * 1000,
   isLoggingOut: false,
+  sessionProcessed: false,
 
   supabase: null,
 
   init() {
     this.isLoggingOut = false;
+    this.sessionProcessed = false;
     this.initSupabase();
     this.handleOAuthSession();
     this.validateSession();
@@ -17,10 +19,11 @@ const Auth = {
     if (!this.supabase) return;
     
     const processSession = () => {
-      if (this.isLoggingOut) return;
+      if (this.isLoggingOut || this.sessionProcessed) return;
       
       this.supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user && !this.isLoggingOut) {
+        if (session?.user && !this.isLoggingOut && !this.sessionProcessed) {
+          this.sessionProcessed = true;
           const user = {
             id: session.user.id,
             email: session.user.email,
@@ -31,8 +34,8 @@ const Auth = {
           window.location.hash = '';
           
           const currentPath = window.location.pathname;
-          if (currentPath.includes('login') || currentPath.includes('signup') || currentPath.endsWith('/login.html') || currentPath.endsWith('/signup.html')) {
-            window.location.href = 'index.html';
+          if (currentPath.includes('login') || currentPath.includes('signup')) {
+            window.location.href = 'dashboard.html';
           } else {
             this.updateUI();
           }
@@ -45,7 +48,8 @@ const Auth = {
     window.addEventListener('hashchange', processSession);
     
     this.supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user && !this.isLoggingOut) {
+      if (event === 'SIGNED_IN' && session?.user && !this.isLoggingOut && !this.sessionProcessed) {
+        this.sessionProcessed = true;
         const user = {
           id: session.user.id,
           email: session.user.email,
@@ -55,8 +59,8 @@ const Auth = {
         this.setSession(user, true);
         
         const currentPath = window.location.pathname;
-        if (currentPath.includes('login') || currentPath.includes('signup') || currentPath.endsWith('/login.html') || currentPath.endsWith('/signup.html')) {
-          window.location.href = 'index.html';
+        if (currentPath.includes('login') || currentPath.includes('signup')) {
+          window.location.href = 'dashboard.html';
         } else {
           this.updateUI();
         }
@@ -260,6 +264,27 @@ const API = {
       };
 
       Auth.setSession(user, rememberMe);
+      
+      try {
+        await fetch('http://localhost:5001/api/register-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            plan: user.plan
+          })
+        });
+      } catch (e) {
+        console.log('User registration note:', e);
+      }
+      
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('login')) {
+        window.location.href = 'dashboard.html';
+      }
+      
       return { success: true, user: user };
     }
 
@@ -294,6 +319,27 @@ const API = {
       };
 
       Auth.setSession(user, true);
+      
+      try {
+        await fetch('http://localhost:5001/api/register-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            plan: user.plan
+          })
+        });
+      } catch (e) {
+        console.log('User registration note:', e);
+      }
+      
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('signup')) {
+        window.location.href = 'dashboard.html';
+      }
+      
       return { success: true, user: user };
     }
 
