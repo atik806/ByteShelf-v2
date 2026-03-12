@@ -265,21 +265,6 @@ const API = {
 
       Auth.setSession(user, rememberMe);
       
-      try {
-        await fetch('http://localhost:5001/api/register-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            plan: user.plan
-          })
-        });
-      } catch (e) {
-        console.log('User registration note:', e);
-      }
-      
       const currentPath = window.location.pathname;
       if (currentPath.includes('login')) {
         window.location.href = 'dashboard.html';
@@ -319,21 +304,6 @@ const API = {
       };
 
       Auth.setSession(user, true);
-      
-      try {
-        await fetch('http://localhost:5001/api/register-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            plan: user.plan
-          })
-        });
-      } catch (e) {
-        console.log('User registration note:', e);
-      }
       
       const currentPath = window.location.pathname;
       if (currentPath.includes('signup')) {

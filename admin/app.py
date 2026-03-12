@@ -5,12 +5,21 @@ import json
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import uuid
+from supabase import create_client, Client
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'admin-secret-key-change-in-production'
 
 ADMIN_USERNAME = 'admin'
 ADMIN_PASSWORD = 'admin123'
+
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'txt', 'doc', 'docx', 'ppt', 'pptx'}
@@ -48,9 +57,16 @@ def load_data():
 
 def calculate_stats(data):
     """Calculate real stats from data"""
+    try:
+        users_response = supabase.auth.admin.list_users()
+        total_students = len(users_response.users) if users_response.users else 0
+    except Exception as e:
+        print(f"Error fetching users from Supabase: {e}")
+        total_students = 0
+    
     return {
         'total_books': len(data['books']),
-        'total_students': len(data.get('users', [])),
+        'total_students': total_students,
         'total_categories': len(data['categories']),
         'featured_books': len([b for b in data['books'] if b.get('featured', False)])
     }
