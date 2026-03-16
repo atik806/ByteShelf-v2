@@ -84,6 +84,10 @@ def create_note():
             'tags': data.get('tags', [])
         }
         
+        print(f"Attempting to create note for user: {user_id}")
+        print(f"Supabase URL: {SUPABASE_URL}")
+        print(f"API Key present: {bool(SUPABASE_KEY)}")
+        
         response = supabase.table('notes').insert(new_note).execute()
         
         return jsonify({
@@ -92,6 +96,7 @@ def create_note():
         }), 201
     except Exception as e:
         print(f"Error creating note: {e}")
+        print(f"Error type: {type(e)}")
         return jsonify({'error': f'Failed to create note: {str(e)}'}), 500
 
 @notes_bp.route('/<note_id>', methods=['PUT'])
