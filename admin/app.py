@@ -11,15 +11,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'admin-secret-key-change-in-production'
+app.secret_key = os.environ.get('SECRET_KEY', 'admin-secret-key-change-in-production')
 
-ADMIN_USERNAME = 'admin'
-ADMIN_PASSWORD = 'admin123'
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+SUPABASE_URL = os.environ.get('SUPABASE_URL')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+else:
+    supabase = None
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'txt', 'doc', 'docx', 'ppt', 'pptx'}
@@ -58,11 +61,14 @@ def load_data():
 def calculate_stats(data):
     """Calculate real stats from data"""
     try:
-        users_response = supabase.auth.admin.list_users()
-        total_students = len(users_response.users) if users_response.users else 0
+        if supabase:
+            users_response = supabase.auth.admin.list_users()
+            total_students = len(users_response.users) if users_response.users else 0
+        else:
+            total_students = len(data.get('users', []))
     except Exception as e:
-        print(f"Error fetching users from Supabase: {e}")
-        total_students = 0
+        print(f"Error fetching users: {e}")
+        total_students = len(data.get('users', []))
     
     return {
         'total_books': len(data['books']),
