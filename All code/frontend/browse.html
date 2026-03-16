@@ -194,6 +194,7 @@
       grid.innerHTML = books.map(book => {
         const inMyBooks = isBookInMyBooks(book.id);
         const badge = book.badge ? `<span class="book-badge">${book.badge}</span>` : '';
+        const hasFile = book.filename ? true : false;
         return `
           <div class="book-card">
             <div class="book-cover">${book.title.charAt(0)}</div>
@@ -204,9 +205,12 @@
               <span class="book-price">$${parseFloat(book.price).toFixed(2)}</span>
               ${badge}
             </div>
-            <button class="btn-add ${inMyBooks ? 'added' : ''}" onclick="addToMyBooks('${book.id}')" ${inMyBooks ? 'disabled' : ''}>
-              ${inMyBooks ? '✓ In My Books' : 'Add to My Books'}
-            </button>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+              ${hasFile ? `<a href="pdf-reader.html?id=${book.id}" class="btn-add" style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center;">📖 Read</a>` : ''}
+              <button class="btn-add ${inMyBooks ? 'added' : ''}" onclick="addToMyBooks('${book.id}')" ${inMyBooks ? 'disabled' : ''} style="flex: 1;">
+                ${inMyBooks ? '✓ In My Books' : 'Add to My Books'}
+              </button>
+            </div>
           </div>
         `;
       }).join('');

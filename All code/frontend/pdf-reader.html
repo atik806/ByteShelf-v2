@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Reader — ByteShelf</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --card: #16161f;
+      --border: #2a2a3a;
+      --accent: #00ffc2;
+      --accent2: #6e44ff;
+      --accent3: #ff4466;
+      --text: #e8e8f0;
+      --muted: #7070a0;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9990;
+      opacity: 0.6;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(0, 255, 194, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 194, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .reader-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .reader-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .back-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .book-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .book-title {
+      font-size: 1rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .book-author {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .reader-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+
+    .control-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: rgba(0, 255, 194, 0.1);
+      color: var(--accent);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .page-input {
+      width: 50px;
+      padding: 6px 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .page-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .page-info {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .reader-content {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .pdf-canvas {
+      max-width: 100%;
+      max-height: 100%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .error-message {
+      background: rgba(255, 68, 102, 0.1);
+      border: 1px solid var(--accent3);
+      color: var(--accent3);
+      padding: 16px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+
+    .reader-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .progress-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--card);
+      border-radius: 2px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px;
+    }
+
+    .footer-info {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .settings-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      transition: all 0.2s;
+    }
+
+    .settings-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .slideshow-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      transition: all 0.2s;
+      margin-left: 8px;
+    }
+
+    .slideshow-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .slideshow-btn.active {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+    }
+
+    .slideshow-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 24px;
+      display: none;
+      align-items: center;
+      gap: 16px;
+      z-index: 999;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .slideshow-controls.active {
+      display: flex;
+      opacity: 0;
+    }
+
+    .slideshow-controls.active:hover {
+      opacity: 1;
+    }
+
+    .slideshow-page:hover .slideshow-controls.active {
+      opacity: 1;
+    }
+
+    .slideshow-controls button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .slideshow-controls button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .slideshow-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      z-index: 998;
+    }
+
+    .slideshow-overlay.active {
+      display: block;
+    }
+
+    .slideshow-page {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .slideshow-page.active {
+      display: flex;
+    }
+
+    .slideshow-page canvas {
+      max-width: 90vw;
+      max-height: 90vh;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    .slideshow-page-info {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: var(--accent);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .slideshow-page:hover .slideshow-page-info {
+      opacity: 1;
+    }
+
+    .slideshow-exit-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .slideshow-page:hover .slideshow-exit-hint {
+      opacity: 1;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .setting-group {
+      margin-bottom: 16px;
+    }
+
+    .setting-label {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .setting-input {
+      width: 100%;
+      padding: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      border-radius: 6px;
+    }
+
+    .setting-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .modal-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 255, 194, 0.3);
+    }
+
+    .modal-btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .modal-btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      .reader-header {
+        flex-wrap: wrap;
+        padding: 12px 16px;
+      }
+
+      .header-left {
+        width: 100%;
+        order: 2;
+      }
+
+      .header-right {
+        width: 100%;
+        order: 1;
+      }
+
+      .book-title {
+        font-size: 0.9rem;
+      }
+
+      .reader-controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .reader-footer {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .page-input {
+        width: 40px;
+        font-size: 0.7rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="reader-container">
+    <header class="reader-header">
+      <div class="header-left">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <div class="book-info">
+          <div class="book-title" id="bookTitle">Loading...</div>
+          <div class="book-author" id="bookAuthor"></div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="reader-controls">
+          <button class="control-btn" id="prevBtn" onclick="previousPage()" title="Previous page">← Prev</button>
+          <input type="number" id="pageInput" class="page-input" min="1" onchange="goToPage(this.value)"
+            title="Go to page">
+          <span class="page-info"><span id="currentPage">1</span> / <span id="totalPages">0</span></span>
+          <button class="control-btn" id="nextBtn" onclick="nextPage()" title="Next page">Next →</button>
+        </div>
+        <button class="settings-btn" onclick="openSettings()">⚙️ Settings</button>
+        <button class="slideshow-btn" id="slideshowBtn" onclick="toggleSlideshow()" title="Start slideshow">▶
+          Slideshow</button>
+      </div>
+    </header>
+
+    <div class="reader-content">
+      <canvas id="pdfCanvas" class="pdf-canvas"></canvas>
+      <div id="loadingMessage" class="loading" style="display: none;">Loading PDF...</div>
+      <div id="errorMessage" class="error-message" style="display: none;"></div>
+    </div>
+
+    <footer class="reader-footer">
+      <div class="progress-bar" id="progressBar" onclick="seekToProgress(event)">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <div class="footer-info" id="footerInfo">Ready</div>
+    </footer>
+  </div>
+
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <h2 class="modal-title">Reader Settings</h2>
+      <div class="setting-group">
+        <label class="setting-label">Zoom Level (%)</label>
+        <input type="number" id="zoomInput" class="setting-input" min="50" max="200" value="100" step="10">
+      </div>
+      <div class="setting-group">
+        <label class="setting-label">Theme</label>
+        <select id="themeSelect" class="setting-input">
+          <option value="dark">Dark (Default)</option>
+          <option value="light">Light</option>
+          <option value="sepia">Sepia</option>
+        </select>
+      </div>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-primary" onclick="applySettings()">Apply</button>
+        <button class="modal-btn modal-btn-secondary" onclick="closeSettings()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="slideshow-overlay" id="slideshowOverlay"></div>
+  <div class="slideshow-page" id="slideshowPage">
+    <canvas id="slideshowCanvas" class="slideshow-canvas"></canvas>
+    <div class="slideshow-page-info" id="slideshowPageInfo">Page 1 / 0</div>
+    <div class="slideshow-exit-hint">Press ESC or click to exit</div>
+  </div>
+
+  <div class="slideshow-controls" id="slideshowControls">
+    <button onclick="previousPageSlideshow()">← Prev</button>
+    <button onclick="nextPageSlideshow()">Next →</button>
+    <button onclick="exitSlideshow()" style="margin-left: auto;">✕ Exit</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    let totalPages = 0;
+    let zoomLevel = 100;
+    let bookData = null;
+    let ADMIN_API = 'http://localhost:5001';
+
+    // Slideshow variables
+    let slideshowActive = false;
+    let slideshowSpeed = 3;
+    let slideshowTimer = null;
+    let slideshowCountdown = 0;
+
+    async function toggleSlideshow() {
+      if (slideshowActive) {
+        exitSlideshow();
+      } else {
+        startSlideshow();
+      }
+    }
+
+    function startSlideshow() {
+      if (!pdfDoc || totalPages === 0) {
+        showError('PDF not loaded yet');
+        return;
+      }
+
+      slideshowActive = true;
+      slideshowCountdown = slideshowSpeed;
+
+      document.getElementById('slideshowBtn').classList.add('active');
+      document.getElementById('slideshowBtn').textContent = '⏹ Stop';
+      document.getElementById('slideshowOverlay').classList.add('active');
+      document.getElementById('slideshowPage').classList.add('active');
+      document.getElementById('slideshowControls').classList.add('active');
+
+      document.querySelector('.reader-header').style.display = 'none';
+      document.querySelector('.reader-footer').style.display = 'none';
+      document.querySelector('.reader-content').style.display = 'none';
+
+      renderSlideshowPage(currentPage);
+      startSlideshowTimer();
+    }
+
+    function exitSlideshow() {
+      slideshowActive = false;
+      clearInterval(slideshowTimer);
+
+      document.getElementById('slideshowBtn').classList.remove('active');
+      document.getElementById('slideshowBtn').textContent = '▶ Slideshow';
+      document.getElementById('slideshowOverlay').classList.remove('active');
+      document.getElementById('slideshowPage').classList.remove('active');
+      document.getElementById('slideshowControls').classList.remove('active');
+
+      document.querySelector('.reader-header').style.display = '';
+      document.querySelector('.reader-footer').style.display = '';
+      document.querySelector('.reader-content').style.display = '';
+    }
+
+    function toggleSlideshowPause() {
+      slideshowPaused = !slideshowPaused;
+      const pauseBtn = document.getElementById('pauseBtn');
+      if (slideshowPaused) {
+        pauseBtn.textContent = '▶ Resume';
+        clearInterval(slideshowTimer);
+      } else {
+        pauseBtn.textContent = '⏸ Pause';
+        startSlideshowTimer();
+      }
+    }
+
+    function startSlideshowTimer() {
+      slideshowCountdown = slideshowSpeed;
+      updateSlideshowTimerDisplay();
+
+      slideshowTimer = setInterval(() => {
+        if (!slideshowPaused && slideshowActive) {
+          slideshowCountdown--;
+          updateSlideshowTimerDisplay();
+
+          if (slideshowCountdown <= 0) {
+            nextPageSlideshow();
+            slideshowCountdown = slideshowSpeed;
+          }
+        }
+      }, 1000);
+    }
+
+    function updateSlideshowTimerDisplay() {
+      document.getElementById('slideshowTimer').textContent = slideshowCountdown + 's';
+    }
+
+    async function nextPageSlideshow() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        await renderSlideshowPage(currentPage);
+        slideshowCountdown = slideshowSpeed;
+        updateSlideshowTimerDisplay();
+      } else {
+        exitSlideshow();
+        showToast('Slideshow finished!', 'success');
+      }
+    }
+
+    async function previousPageSlideshow() {
+      if (currentPage > 1) {
+        currentPage--;
+        await renderSlideshowPage(currentPage);
+        slideshowCountdown = slideshowSpeed;
+        updateSlideshowTimerDisplay();
+      }
+    }
+
+    async function renderSlideshowPage(pageNum) {
+      try {
+        if (pageNum < 1 || pageNum > totalPages) return;
+
+        const page = await pdfDoc.getPage(pageNum);
+        const canvas = document.getElementById('slideshowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const scale = 2;
+        const viewport = page.getViewport({ scale: scale });
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        }).promise;
+
+        document.getElementById('slideshowPageInfo').textContent = `Page ${pageNum} / ${totalPages}`;
+        saveReadingProgress();
+      } catch (error) {
+        console.error('Error rendering slideshow page:', error);
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;bottom:24px;right:24px;padding:16px 24px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-family:var(--mono);font-size:0.8rem;z-index:10000;animation:slideIn 0.3s ease;';
+      toast.innerHTML = `<span style="color:${type === 'success' ? 'var(--accent)' : 'var(--text)'}">${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    async function initReader() {
+      if (!Auth.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const bookId = params.get('id');
+
+      if (!bookId) {
+        showError('No book selected');
+        return;
+      }
+
+      try {
+        showLoading(true);
+        const response = await fetch(`${ADMIN_API}/api/books/${bookId}`);
+        if (!response.ok) throw new Error('Book not found');
+
+        bookData = await response.json();
+        document.getElementById('bookTitle').textContent = bookData.title;
+        document.getElementById('bookAuthor').textContent = bookData.author;
+
+        if (!bookData.filename) {
+          showError('This book does not have a PDF file');
+          return;
+        }
+
+        const pdfUrl = `${ADMIN_API}/upload/${bookData.filename}`;
+        await loadPDF(pdfUrl);
+        updateReadingProgress();
+      } catch (error) {
+        console.error('Error loading book:', error);
+        showError('Failed to load book: ' + error.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function loadPDF(url) {
+      try {
+        pdfDoc = await pdfjsLib.getDocument(url).promise;
+        totalPages = pdfDoc.numPages;
+        document.getElementById('totalPages').textContent = totalPages;
+        document.getElementById('pageInput').max = totalPages;
+
+        const savedPage = localStorage.getItem(`book_page_${bookData.id}`);
+        if (savedPage) {
+          currentPage = Math.min(parseInt(savedPage), totalPages);
+        } else {
+          currentPage = 1;
+        }
+
+        await renderPage(currentPage);
+      } catch (error) {
+        throw new Error('Failed to load PDF: ' + error.message);
+      }
+    }
+
+    async function renderPage(pageNum) {
+      try {
+        if (pageNum < 1 || pageNum > totalPages) return;
+
+        currentPage = pageNum;
+        document.getElementById('currentPage').textContent = currentPage;
+        document.getElementById('pageInput').value = currentPage;
+
+        const page = await pdfDoc.getPage(pageNum);
+        const canvas = document.getElementById('pdfCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const scale = zoomLevel / 100;
+        const viewport = page.getViewport({ scale: scale * 1.5 });
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        }).promise;
+
+        updateProgressBar();
+        updateFooterInfo();
+        saveReadingProgress();
+        updatePrevNextButtons();
+      } catch (error) {
+        console.error('Error rendering page:', error);
+        showError('Failed to render page');
+      }
+    }
+
+    function nextPage() {
+      if (currentPage < totalPages) {
+        renderPage(currentPage + 1);
+      }
+    }
+
+    function previousPage() {
+      if (currentPage > 1) {
+        renderPage(currentPage - 1);
+      }
+    }
+
+    function goToPage(pageNum) {
+      const page = Math.max(1, Math.min(parseInt(pageNum) || 1, totalPages));
+      renderPage(page);
+    }
+
+    function updatePrevNextButtons() {
+      document.getElementById('prevBtn').disabled = currentPage <= 1;
+      document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+    }
+
+    function updateProgressBar() {
+      const progress = (currentPage / totalPages) * 100;
+      document.getElementById('progressFill').style.width = progress + '%';
+    }
+
+    function seekToProgress(event) {
+      const progressBar = document.getElementById('progressBar');
+      const rect = progressBar.getBoundingClientRect();
+      const percent = (event.clientX - rect.left) / rect.width;
+      const page = Math.ceil(percent * totalPages);
+      renderPage(Math.max(1, Math.min(page, totalPages)));
+    }
+
+    function updateFooterInfo() {
+      const progress = Math.round((currentPage / totalPages) * 100);
+      document.getElementById('footerInfo').textContent = `Page ${currentPage} of ${totalPages} (${progress}%)`;
+    }
+
+    function saveReadingProgress() {
+      if (bookData) {
+        localStorage.setItem(`book_page_${bookData.id}`, currentPage);
+        const progress = Math.round((currentPage / totalPages) * 100);
+        localStorage.setItem(`book_progress_${bookData.id}`, progress);
+      }
+    }
+
+    function updateReadingProgress() {
+      if (bookData) {
+        const myBooks = JSON.parse(localStorage.getItem('my_books') || '[]');
+        const bookIndex = myBooks.findIndex(b => b.id === bookData.id);
+
+        if (bookIndex >= 0) {
+          myBooks[bookIndex].progress = Math.round((currentPage / totalPages) * 100);
+          myBooks[bookIndex].status = 'reading';
+        } else {
+          myBooks.push({
+            id: bookData.id,
+            title: bookData.title,
+            author: bookData.author,
+            category: bookData.category,
+            progress: 0,
+            status: 'reading'
+          });
+        }
+
+        localStorage.setItem('my_books', JSON.stringify(myBooks));
+      }
+    }
+
+    function openSettings() {
+      document.getElementById('settingsModal').classList.add('open');
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.remove('open');
+    }
+
+    function applySettings() {
+      const newZoom = parseInt(document.getElementById('zoomInput').value) || 100;
+      const theme = document.getElementById('themeSelect').value;
+
+      zoomLevel = newZoom;
+      localStorage.setItem('reader_zoom', zoomLevel);
+      localStorage.setItem('reader_theme', theme);
+
+      applyTheme(theme);
+      renderPage(currentPage);
+      closeSettings();
+    }
+
+    function applyTheme(theme) {
+      const root = document.documentElement;
+      if (theme === 'light') {
+        root.style.setProperty('--bg', '#f5f5f5');
+        root.style.setProperty('--surface', '#ffffff');
+        root.style.setProperty('--card', '#f0f0f0');
+        root.style.setProperty('--text', '#1a1a1a');
+        root.style.setProperty('--muted', '#666666');
+      } else if (theme === 'sepia') {
+        root.style.setProperty('--bg', '#f4ecd8');
+        root.style.setProperty('--surface', '#fef5e7');
+        root.style.setProperty('--card', '#fef9e7');
+        root.style.setProperty('--text', '#5d4e37');
+        root.style.setProperty('--muted', '#8b7355');
+      } else {
+        root.style.setProperty('--bg', '#0a0a0f');
+        root.style.setProperty('--surface', '#111118');
+        root.style.setProperty('--card', '#16161f');
+        root.style.setProperty('--text', '#e8e8f0');
+        root.style.setProperty('--muted', '#7070a0');
+      }
+    }
+
+    function showLoading(show) {
+      document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+    }
+
+    function showError(message) {
+      const errorEl = document.getElementById('errorMessage');
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') nextPage();
+      if (e.key === 'ArrowLeft') previousPage();
+      if (e.key === 'Escape') {
+        if (slideshowActive) {
+          exitSlideshow();
+        } else {
+          closeSettings();
+        }
+      }
+    });
+
+    document.getElementById('slideshowOverlay').addEventListener('click', () => {
+      if (slideshowActive) {
+        exitSlideshow();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedZoom = localStorage.getItem('reader_zoom');
+      const savedTheme = localStorage.getItem('reader_theme');
+
+      if (savedZoom) zoomLevel = parseInt(savedZoom);
+      if (savedTheme) applyTheme(savedTheme);
+
+      initReader();
+    });
+  </script>
+</body>
+
+</html>

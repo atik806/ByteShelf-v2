@@ -502,7 +502,7 @@
       const { error } = await Auth.supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: window.location.origin + '/index.html'
+          redirectTo: window.location.origin + '/dashboard.html'
         }
       });
 

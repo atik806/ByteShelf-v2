@@ -1,6 +1,6 @@
 {
   "name": "byteshelf-admin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "ByteShelf Admin Panel - Content management system for the ByteShelf CS knowledge platform",
   "main": "app.py",
   "scripts": {

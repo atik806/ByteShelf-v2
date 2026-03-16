@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             message.style.opacity = '0';
             setTimeout(() => {
+
                 message.style.display = 'none';
             }, 300);
         }, 5000);

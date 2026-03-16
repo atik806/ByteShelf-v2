@@ -195,7 +195,7 @@
     function openBook(id) {
       const book = myBooks.find(b => b.id === id);
       if (book) {
-        showToast(`Opening "${book.title}"...`, 'info');
+        window.location.href = `pdf-reader.html?id=${id}`;
       }
     }
 

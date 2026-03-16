@@ -1,6 +1,6 @@
 {
   "name": "byteshelf-platform",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "ByteShelf - CS Knowledge Platform for students to access premium PDF books and resources",
   "main": "backend/app.py",
   "scripts": {
