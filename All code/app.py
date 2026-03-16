@@ -7,6 +7,11 @@ import sys
 from pathlib import Path
 from flask import Flask, send_from_directory
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = Path(__file__).parent / '.env'
+load_dotenv(env_path)
 
 # Add backend to path
 backend_path = Path(__file__).parent / "backend"
@@ -14,6 +19,7 @@ sys.path.insert(0, str(backend_path))
 
 # Import backend routes
 from routes.main import main_bp
+from routes.notes import notes_bp
 from config import config
 
 def create_app(config_name=None):
@@ -27,7 +33,8 @@ def create_app(config_name=None):
     # Enable CORS
     CORS(app)
     
-    # Register blueprints
+    # Register blueprints - notes first so /api/ routes take precedence
+    app.register_blueprint(notes_bp)
     app.register_blueprint(main_bp)
     
     # Serve frontend static files
@@ -41,6 +48,10 @@ def create_app(config_name=None):
     @app.route('/<path:filename>')
     def serve_static(filename):
         """Serve static files from frontend"""
+        # Don't serve /api/ routes as static files
+        if filename.startswith('api/'):
+            return "Not found", 404
+        
         try:
             return send_from_directory(frontend_path, filename)
         except FileNotFoundError:

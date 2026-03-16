@@ -38,6 +38,10 @@ def health_check():
 @main_bp.route('/<path:filename>')
 def static_files(filename):
     """Serve static files from the frontend directory"""
+    # Don't serve /api/ routes as static files
+    if filename.startswith('api/'):
+        return "Not found", 404
+    
     try:
         frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'frontend')
         return send_from_directory(frontend_path, filename)

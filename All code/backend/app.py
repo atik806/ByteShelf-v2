@@ -1,5 +1,6 @@
 from flask import Flask
 from routes.main import main_bp
+from routes.notes import notes_bp
 from config import config
 import os
 
@@ -13,6 +14,7 @@ def create_app(config_name=None):
     
     # Register blueprints
     app.register_blueprint(main_bp)
+    app.register_blueprint(notes_bp)
     
     # Error handlers
     @app.errorhandler(404)
