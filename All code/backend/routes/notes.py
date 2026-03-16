@@ -12,8 +12,8 @@ import uuid
 notes_bp = Blueprint('notes', __name__, url_prefix='/api/notes')
 
 # Initialize Supabase client
-SUPABASE_URL = os.environ.get('SUPABASE_URL')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+SUPABASE_URL = os.environ.get('SUPABASE_URL') or os.environ.get('PROJECT_URL')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY') or os.environ.get('PROJECT_KEY')
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables are required")
