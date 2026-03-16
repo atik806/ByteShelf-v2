@@ -19,11 +19,5 @@
   "env": {
     "FLASK_ENV": "production",
     "PYTHONUNBUFFERED": "1"
-  },
-  "functions": {
-    "app.py": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
   }
 }
